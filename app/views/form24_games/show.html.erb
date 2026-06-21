@@ -1,0 +1,58 @@
+<h1>Form 24 — Your Hand</h1>
+
+<% hand_with_urls = @cards.map do |c|
+     { code: c, url: asset_path("cards/cards-png-320px/#{c}.png") }
+   end %>
+
+<div data-controller="form24-game" data-form24-game-id-value="<%= @game.id %>" data-form24-game-hand-value='<%= raw hand_with_urls.to_json %>'>
+  <div class="current-expression" id="current-expression">&nbsp;</div>
+
+  <div class="controls">
+    <div class="operators">
+      <button type="button" data-action="click->form24-game#chooseOperator" data-op="+">+</button>
+      <button type="button" data-action="click->form24-game#chooseOperator" data-op="-">−</button>
+      <button type="button" data-action="click->form24-game#chooseOperator" data-op="*">×</button>
+      <button type="button" data-action="click->form24-game#chooseOperator" data-op="/">÷</button>
+    </div>
+    <div class="actions">
+      <button type="button" data-action="click->form24-game#undo">Undo</button>
+      <button type="button" data-action="click->form24-game#clear">Clear</button>
+    </div>
+  </div>
+
+  <div class="play-area">
+    <div class="deck" id="deck-container">
+      <%= image_tag asset_path('cards/card-back.jpg'), alt: 'Deck', class: 'deck-image' %>
+      <div class="deck-count"><%= @game.cards_left %></div>
+    </div>
+
+    <div class="cards" id="cards-container">
+      <!-- cards rendered by Stimulus -->
+    </div>
+  </div>
+
+  <p>Card values: <strong><%= @cards.map { |c|
+    r = c[0..-2]
+    case r
+    when 'A' then 1
+    when 'J' then 11
+    when 'Q' then 12
+    when 'K' then 13
+    else r.to_i
+    end
+  }.join(', ') %></strong></p>
+  <p>Cards left in deck: <strong><%= @game.cards_left %></strong></p>
+  <p>Draws: <strong id="draws-count"><%= @game.draws %></strong> — Penalty: <strong id="penalty-count"><%= @game.penalty %></strong></p>
+  <p>Score: <strong id="score-count"><%= @game.score || 0 %></strong></p>
+
+  <%= button_to 'Draw one card (incur penalty)', draw_form24_game_path(@game), method: :post, form_class: 'inline' %>
+  <%= button_to 'New 4 cards (reshuffle)', new_hand_form24_game_path(@game), method: :post, form_class: 'inline' %>
+
+  <form data-action="submit->form24-game#submit" id="form24-form">
+    <label>Expression (use all cards):</label>
+    <input type="text" name="expression" id="expression" required />
+    <button type="submit">Check</button>
+  </form>
+
+  <div id="result"></div>
+</div>
